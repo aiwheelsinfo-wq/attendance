@@ -67,7 +67,7 @@ function getTodayDateStr() {
 
 // Global Authentication Redirect Guard
 app.use((req, res, next) => {
-  const publicPaths = ['/login', '/css', '/js', '/img', '/favicon.ico'];
+  const publicPaths = ['/login', '/css', '/js', '/img', '/favicon.ico', '/.well-known'];
   const isPublicPath = publicPaths.some(p => req.path === p || req.path.startsWith(p + '/'));
   
   if (!req.session.user && !isPublicPath) {
