@@ -1,0 +1,127 @@
+<!-- Toast Notification Stack -->
+<div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col items-end space-y-2 pointer-events-none"></div>
+
+<!-- Top Header Navigation -->
+<header class="sticky top-0 z-30 flex items-center justify-between w-full h-16 px-6 bg-white border-b border-slate-200 soft-shadow no-print">
+  
+  <!-- Left Side: Mobile Toggle and Brand Title -->
+  <div class="flex items-center space-x-3">
+    <button id="sidebar-toggle" class="p-2 text-slate-500 rounded-lg lg:hidden hover:bg-slate-100 hover:text-slate-900 focus:outline-none">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+    <div class="flex flex-col">
+      <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Enterprise HRMS</span>
+      <h1 class="text-lg font-bold text-slate-800 leading-tight">Attendance Workspace</h1>
+    </div>
+  </div>
+
+  <!-- Right Side: DB indicator, Switcher, Notifications, Profile -->
+  <div class="flex items-center space-x-4">
+    
+    <!-- DB Connection Status Badge -->
+    <div class="hidden sm:flex items-center">
+      <% if (dbStatus.connected) { %>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <%= dbStatus.type %> Connected
+        </span>
+      <% } else { %>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200 cursor-pointer" onclick="openModal('db-info-modal')" title="Click for details">
+          <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+          Demo Mode (Offline)
+        </span>
+      <% } %>
+    </div>
+
+    <!-- Notifications Bell Dropdown -->
+    <div class="relative" id="notification-dropdown">
+      <button onclick="toggleNotificationDropdown()" class="p-2 text-slate-500 rounded-lg hover:bg-slate-100 hover:text-slate-900 focus:outline-none relative">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+        </svg>
+        <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 border border-white rounded-full"></span>
+      </button>
+      
+      <!-- Panel (Hidden by default) -->
+      <div id="notification-panel" class="absolute right-0 w-80 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden hidden transition-all scale-95 origin-top-right z-50">
+        <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+          <span class="text-sm font-semibold text-slate-700">Real-time HR Alerts</span>
+          <span class="text-xs text-blue-600 font-medium cursor-pointer hover:underline" onclick="clearNotifications()">Clear all</span>
+        </div>
+        <div class="divide-y divide-slate-100 max-h-64 overflow-y-auto">
+          <!-- Alert 1 -->
+          <div class="p-3 flex items-start space-x-3 hover:bg-slate-50">
+            <span class="w-2 h-2 mt-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
+            <div class="flex-1">
+              <p class="text-xs font-semibold text-slate-700">Late Arrival Detected</p>
+              <p class="text-xs text-slate-500">Amit Sharma checked in at 09:42 AM (42 mins late)</p>
+              <p class="text-[10px] text-slate-400 mt-1">Today</p>
+            </div>
+          </div>
+          <!-- Alert 2 -->
+          <div class="p-3 flex items-start space-x-3 hover:bg-slate-50">
+            <span class="w-2 h-2 mt-1.5 rounded-full bg-rose-500 flex-shrink-0"></span>
+            <div class="flex-1">
+              <p class="text-xs font-semibold text-slate-700">Missing Checkout Warning</p>
+              <p class="text-xs text-slate-500">Kiran Rao forgot to check out yesterday</p>
+              <p class="text-[10px] text-slate-400 mt-1">Yesterday</p>
+            </div>
+          </div>
+          <!-- Alert 3 -->
+          <div class="p-3 flex items-start space-x-3 hover:bg-slate-50">
+            <span class="w-2 h-2 mt-1.5 rounded-full bg-green-500 flex-shrink-0"></span>
+            <div class="flex-1">
+              <p class="text-xs font-semibold text-slate-700">Audit Upload Logged</p>
+              <p class="text-xs text-slate-500">Priya Patel uploaded CSV attendance log</p>
+              <p class="text-[10px] text-slate-400 mt-1">2 days ago</p>
+            </div>
+          </div>
+        </div>
+        <div class="px-4 py-2 border-t border-slate-100 text-center bg-slate-50">
+          <a href="/admin-settings" class="text-xs font-semibold text-blue-600 hover:text-blue-800">View audit history</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Profile Dropdown -->
+    <div class="flex items-center space-x-3 pl-2 border-l border-slate-200">
+      <div class="flex flex-col text-right">
+        <span class="text-sm font-semibold text-slate-700 leading-tight"><%= currentUser.username %></span>
+        <span class="text-xs text-slate-500"><%= currentUser.role %></span>
+      </div>
+      <div class="w-10 h-10 rounded-full border border-slate-200 bg-slate-100 overflow-hidden relative">
+        <!-- Render a dynamic avatar based on name -->
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=<%= currentUser.username %>" alt="Profile" class="object-cover w-full h-full">
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<script>
+  function toggleNotificationDropdown() {
+    const panel = document.getElementById('notification-panel');
+    panel.classList.toggle('hidden');
+    panel.classList.toggle('scale-95');
+    panel.classList.toggle('scale-100');
+  }
+
+  // Click outside to close notification panel
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('notification-dropdown');
+    const panel = document.getElementById('notification-panel');
+    if (dropdown && !dropdown.contains(e.target) && panel) {
+      panel.classList.add('hidden');
+      panel.classList.remove('scale-100');
+      panel.classList.add('scale-95');
+    }
+  });
+
+  function clearNotifications() {
+    showToast('Notifications cleared', 'info');
+    const panel = document.getElementById('notification-panel');
+    if (panel) panel.classList.add('hidden');
+  }
+</script>

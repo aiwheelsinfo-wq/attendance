@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agni HRMS - Register & Manage Employees</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+  <!-- Sidebar Partial -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main View -->
+  <div class="flex flex-col flex-1 min-w-0 overflow-y-auto">
+    
+    <!-- Top Nav -->
+    <%- include('partials/header') %>
+
+    <!-- Content Workspace -->
+    <main class="p-6 space-y-6 w-full">
+
+      <!-- Breadcrumbs and title -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Register & Manage Roster</h2>
+          <p class="text-xs text-slate-500">Configure new profiles and review the active corporate employee directory list</p>
+        </div>
+        <a href="/dashboard" class="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors">
+          Back to Dashboard
+        </a>
+      </div>
+
+      <!-- Two-Column Grid: Form Left, Directory Right -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        
+        <!-- Left: Form Column -->
+        <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl soft-shadow overflow-hidden">
+          
+          <!-- Form Header -->
+          <div class="p-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex justify-between items-center">
+            <div>
+              <h3 class="text-sm font-bold">New Employee Profile</h3>
+              <p class="text-[10px] text-blue-100">Ensure the employee ID is unique</p>
+            </div>
+            <svg class="w-6 h-6 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+          </div>
+
+          <form action="/admin/add-employee" method="POST" class="p-5 space-y-4">
+            
+            <!-- Live Avatar Preview Area -->
+            <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200/60">
+              <div class="w-12 h-12 rounded-full border-2 border-blue-100 bg-white overflow-hidden shadow-inner flex items-center justify-center flex-shrink-0">
+                <img id="avatar-live-preview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=new-user" class="w-full h-full object-cover">
+              </div>
+              <div class="overflow-hidden">
+                <h4 class="text-xs font-semibold text-slate-800 truncate">Card Avatar Preview</h4>
+                <p class="text-[9px] text-slate-400">Updates live based on name entry</p>
+              </div>
+            </div>
+
+            <!-- Employee ID -->
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Employee ID</label>
+              <input type="text" name="employeeId" placeholder="e.g. EMP-011" required class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl py-2 px-3 shadow-sm">
+            </div>
+
+            <!-- Full Name -->
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Full Name</label>
+              <input type="text" name="name" id="employee-name-input" placeholder="e.g. Rahul Sen" required onkeyup="updateLiveAvatar(this.value)" class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl py-2 px-3 shadow-sm">
+            </div>
+
+            <!-- Email Address -->
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Corporate Email</label>
+              <input type="email" name="email" placeholder="e.g. rahul.sen@company.com" required class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl py-2 px-3 shadow-sm">
+            </div>
+
+            <!-- Department -->
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Department</label>
+              <select name="department" required class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl py-2 px-3 shadow-sm">
+                <option value="IT & Software">IT & Software</option>
+                <option value="Human Resources">Human Resources</option>
+                <option value="Finance">Finance</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Operations">Operations</option>
+                <option value="Sales">Sales</option>
+              </select>
+            </div>
+
+            <!-- System Role -->
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">System Role</label>
+              <select name="role" required class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl py-2 px-3 shadow-sm">
+                <option value="Employee" selected>Employee</option>
+                <option value="Manager">Manager</option>
+                <option value="HR">HR Manager</option>
+                <option value="Admin">Administrator</option>
+              </select>
+            </div>
+
+            <!-- Initial Status -->
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status</label>
+              <select name="status" class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl py-2 px-3 shadow-sm">
+                <option value="Active" selected>Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+              <button type="reset" onclick="resetAvatar()" class="px-4 py-2 border border-slate-200 text-slate-600 bg-white rounded-xl text-xs font-semibold hover:bg-slate-50">Reset</button>
+              <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/10">Save Employee</button>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Right: Employee List Column (2/3 width) -->
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl soft-shadow overflow-hidden flex flex-col">
+          
+          <!-- Table Header -->
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">Employee Directory</h3>
+              <p class="text-[10px] text-slate-400">Total registered members: <%= employeesList.length %></p>
+            </div>
+            <!-- Search bar -->
+            <div class="relative w-48 sm:w-64">
+              <input type="text" id="employeeSearch" onkeyup="filterEmployeeList()" placeholder="Search names, IDs, departments..." class="w-full pl-8 pr-3 py-1.5 border-slate-200 focus:border-blue-500 text-[11px] rounded-xl shadow-sm">
+              <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse" id="employeeTable">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <th class="px-5 py-3">Employee</th>
+                  <th class="px-5 py-3">Employee ID</th>
+                  <th class="px-5 py-3">Email Address</th>
+                  <th class="px-5 py-3">Department</th>
+                  <th class="px-5 py-3">Role</th>
+                  <th class="px-5 py-3">Status</th>
+                  <th class="px-5 py-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <% if (employeesList.length > 0) { %>
+                  <% employeesList.forEach(emp => { %>
+                    <tr class="hover:bg-slate-50/30 transition-all font-medium employee-row">
+                      <td class="px-5 py-3 whitespace-nowrap flex items-center space-x-2.5">
+                        <div class="w-7 h-7 rounded-full overflow-hidden border border-slate-200 bg-slate-100 flex-shrink-0">
+                          <img src="<%= emp.avatar %>" class="w-full h-full object-cover">
+                        </div>
+                        <span class="font-bold text-slate-800 name-col"><%= emp.name %></span>
+                      </td>
+                      <td class="px-5 py-3 whitespace-nowrap font-mono text-[10px] text-slate-600 id-col"><%= emp.employeeId %></td>
+                      <td class="px-5 py-3 whitespace-nowrap text-slate-500"><%= emp.email %></td>
+                      <td class="px-5 py-3 whitespace-nowrap text-slate-500 dept-col"><%= emp.department %></td>
+                      <td class="px-5 py-3 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                          <%= emp.role %>
+                        </span>
+                      </td>
+                      <td class="px-5 py-3 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold <%= emp.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-600 border border-slate-150' %>">
+                          <%= emp.status %>
+                        </span>
+                      </td>
+                      <td class="px-5 py-3 whitespace-nowrap text-center font-normal">
+                        <button onclick="event.stopPropagation(); deleteEmployeeRecord('<%= emp.employeeId %>')" class="p-1 text-red-400 hover:text-red-600 transition-colors" title="Delete Profile">
+                          <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                      </td>
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="7" class="px-5 py-8 text-center text-slate-400">No employees registered yet.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <%- include('partials/modals') %>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/exports.js"></script>
+
+  <script>
+    // Live update profile avatar based on entered name
+    function updateLiveAvatar(name) {
+      const preview = document.getElementById('avatar-live-preview');
+      if (!name.trim()) {
+        preview.src = "https://api.dicebear.com/7.x/avataaars/svg?seed=new-user";
+        return;
+      }
+      preview.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+    }
+
+    function resetAvatar() {
+      setTimeout(() => {
+        updateLiveAvatar('');
+      }, 50);
+    }
+
+    // Client side filter search
+    function filterEmployeeList() {
+      const input = document.getElementById('employeeSearch');
+      const filter = input.value.toLowerCase();
+      const rows = document.querySelectorAll('.employee-row');
+
+      rows.forEach(row => {
+        const name = row.querySelector('.name-col').textContent.toLowerCase();
+        const id = row.querySelector('.id-col').textContent.toLowerCase();
+        const dept = row.querySelector('.dept-col').textContent.toLowerCase();
+        
+        if (name.includes(filter) || id.includes(filter) || dept.includes(filter)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    async function deleteEmployeeRecord(employeeId) {
+      if (!confirm(`Are you sure you want to delete employee ${employeeId} permanently? This will also clear all their attendance logs and records from the database.`)) return;
+      try {
+        const res = await fetch(`/admin/delete-employee/${employeeId}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Employee profile deleted successfully', 'success');
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          showToast('Delete failed: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('Network error during deletion', 'error');
+      }
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!-- 1. ATTENDANCE DETAILS MODAL -->
+<div id="details-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden modal-overlay">
+  <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden modal-content transform transition-all duration-300 scale-95 opacity-0">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center">
+        <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+        Employee Attendance Log Card
+      </h3>
+      <button onclick="closeModal('details-modal')" class="text-slate-400 hover:text-slate-600 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <!-- Body -->
+    <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto" id="details-modal-body">
+      <!-- Content populated dynamically via JS -->
+      <div class="flex items-center space-x-4">
+        <div class="w-16 h-16 rounded-full bg-slate-200 skeleton-loading"></div>
+        <div class="space-y-2">
+          <div class="h-4 w-32 bg-slate-200 rounded skeleton-loading"></div>
+          <div class="h-3 w-20 bg-slate-200 rounded skeleton-loading"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-between">
+      <button onclick="triggerIndividualPDF()" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h55a2 2 0 012 2v14a2 2 0 01-2 2z"></path></svg>
+        Download PDF Card
+      </button>
+      <button onclick="closeModal('details-modal')" class="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. EDIT ATTENDANCE MODAL -->
+<div id="edit-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden modal-overlay">
+  <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden modal-content transform transition-all duration-300 scale-95 opacity-0">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center">
+        <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+        Modify Attendance Log
+      </h3>
+      <button onclick="closeModal('edit-modal')" class="text-slate-400 hover:text-slate-600 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <form action="/admin/edit" method="POST">
+      <input type="hidden" name="recordId" id="edit-record-id">
+      <div class="p-6 space-y-4">
+        
+        <!-- Employee Profile Snippet -->
+        <div class="p-3 bg-blue-50/50 border border-blue-100 rounded-xl flex items-center space-x-3 mb-2">
+          <img id="edit-emp-avatar" class="w-10 h-10 rounded-full" src="/img/default-avatar.svg">
+          <div>
+            <h4 id="edit-emp-name" class="text-sm font-semibold text-slate-800"></h4>
+            <p id="edit-emp-meta" class="text-xs text-slate-500"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">Check In Time</label>
+            <input type="text" name="checkIn" id="edit-checkin" placeholder="09:00 AM" class="w-full text-sm border-slate-200 rounded-xl focus:border-blue-500 focus:ring-blue-500/20">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">Check Out Time</label>
+            <input type="text" name="checkOut" id="edit-checkout" placeholder="06:00 PM" class="w-full text-sm border-slate-200 rounded-xl focus:border-blue-500 focus:ring-blue-500/20">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">Status</label>
+            <select name="status" id="edit-status" class="w-full text-sm border-slate-200 rounded-xl focus:border-blue-500 focus:ring-blue-500/20">
+              <option value="Present">Present</option>
+              <option value="Absent">Absent</option>
+              <option value="Leave">On Leave</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1">Overtime (Hours)</label>
+            <input type="number" step="0.5" name="overtime" id="edit-overtime" min="0" class="w-full text-sm border-slate-200 rounded-xl focus:border-blue-500 focus:ring-blue-500/20">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Location</label>
+          <input type="text" name="location" id="edit-location" class="w-full text-sm border-slate-200 rounded-xl focus:border-blue-500 focus:ring-blue-500/20">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Administrative Notes</label>
+          <textarea name="notes" id="edit-notes" rows="2" class="w-full text-sm border-slate-200 rounded-xl focus:border-blue-500 focus:ring-blue-500/20" placeholder="Reason for edit..."></textarea>
+        </div>
+
+      </div>
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end space-x-3">
+        <button type="button" onclick="closeModal('edit-modal')" class="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/10">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 3. DATABASE OFFLINE INFO MODAL -->
+<div id="db-info-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden modal-overlay">
+  <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden modal-content transform transition-all duration-300 scale-95 opacity-0">
+    <div class="p-6 text-center space-y-4">
+      <div class="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 mx-auto">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      </div>
+      <h3 class="text-base font-bold text-slate-800">Database Connection Guidelines</h3>
+      <p class="text-sm text-slate-500 leading-relaxed text-left">
+        The application is currently running in <strong>Demo Mode (In-Memory Database)</strong> because the server could not connect to MongoDB.
+      </p>
+      <div class="p-3 bg-slate-50 rounded-xl text-left text-xs text-slate-600 font-mono space-y-2 border border-slate-200">
+        <p class="font-semibold text-slate-700">How to connect MongoDB Atlas:</p>
+        <p>1. Open the <span class="bg-slate-200 px-1 rounded">.env</span> file in the project folder.</p>
+        <p>2. Locate the <span class="text-blue-600">MONGO_URI</span> configuration.</p>
+        <p>3. Replace <span class="text-rose-600">&lt;cluster-url&gt;</span> with your host domain (e.g. <span class="text-slate-800">cluster0.asdfg.mongodb.net</span>).</p>
+        <p>4. Save the file and restart the server!</p>
+      </div>
+      <p class="text-xs text-slate-400 text-left">
+        Note: Under Demo Mode, you can still test all dashboards, filters, checking in/out, editing records, and downloading reports. Changes are stored in-memory during server run.
+      </p>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-center">
+      <button onclick="closeModal('db-info-modal')" class="px-6 py-2 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900 rounded-xl">Got It</button>
+    </div>
+  </div>
+</div>
+
+<!-- 4. INTEGRATIONS DEVICE SIMULATOR MODAL -->
+<div id="biometric-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden modal-overlay">
+  <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden modal-content transform transition-all duration-300 scale-95 opacity-0">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center">
+        <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h.01M16 20h2M8 20h2M12 20h.01M16 16h.01M8 16h.01M12 16h.01M4 16h.01M16 12h.01M8 12h.01M4 12h.01M16 8h.01M8 8h.01M4 8h.01M16 4h.01M8 4h.01M4 4h.01M12 8h.01"></path></svg>
+        Biometrics & Device Sync Interface
+      </h3>
+      <button onclick="closeModal('biometric-modal')" class="text-slate-400 hover:text-slate-600 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    
+    <!-- Modal Tab Selectors -->
+    <div class="flex border-b border-slate-100 text-sm font-semibold text-slate-500 bg-slate-50/50">
+      <button onclick="switchBioTab('qr')" id="bio-tab-btn-qr" class="flex-1 py-3 text-center text-blue-600 border-b-2 border-blue-500 focus:outline-none">QR Code</button>
+      <button onclick="switchBioTab('face')" id="bio-tab-btn-face" class="flex-1 py-3 text-center border-b-2 border-transparent focus:outline-none">Face ID</button>
+      <button onclick="switchBioTab('biometric')" id="bio-tab-btn-biometric" class="flex-1 py-3 text-center border-b-2 border-transparent focus:outline-none">Fingerprint</button>
+    </div>
+
+    <div class="p-6">
+      
+      <!-- QR code TAB -->
+      <div id="bio-tab-qr" class="space-y-4 text-center">
+        <p class="text-xs text-slate-500">Scan QR Code terminal on check-in to verify entry</p>
+        <div class="w-48 h-48 border-2 border-dashed border-blue-200 rounded-2xl mx-auto flex items-center justify-center bg-slate-50 relative overflow-hidden group">
+          <!-- Mock QR image -->
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=EMP-001-CHECKIN" class="w-36 h-36">
+          <div class="absolute inset-x-0 top-0 h-0.5 bg-blue-500 shadow-md shadow-blue-400 animate-bounce"></div>
+        </div>
+        <button onclick="simulateVerification('QR Code Scan')" class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700">Simulate Scan Verification</button>
+      </div>
+
+      <!-- Face ID TAB -->
+      <div id="bio-tab-face" class="space-y-4 text-center hidden">
+        <p class="text-xs text-slate-500">Align face inside the camera viewport bounds</p>
+        <div class="w-48 h-48 border-2 border-blue-500 rounded-full mx-auto overflow-hidden bg-slate-900 flex items-center justify-center relative shadow-inner">
+          <svg class="w-16 h-16 text-slate-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <!-- Mock scan line -->
+          <div class="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-transparent animate-pulse border-b-2 border-blue-500"></div>
+        </div>
+        <button onclick="simulateVerification('Facial Recognition')" class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700">Simulate Biometric Scan</button>
+      </div>
+
+      <!-- Fingerprint TAB -->
+      <div id="bio-tab-biometric" class="space-y-4 text-center hidden">
+        <p class="text-xs text-slate-500">Place finger on scanning device sensor node</p>
+        <div class="w-36 h-36 bg-blue-50 hover:bg-blue-100 rounded-full mx-auto flex items-center justify-center text-blue-600 cursor-pointer animate-pulse">
+          <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 009 11a13.916 13.916 0 00-1.543-6.262l-.054-.09A13.916 13.916 0 0012 11zm0 0c.753-2.04 1.543-4.143 1.543-6.262l.054-.09a13.914 13.914 0 011.603 6.352c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09a13.916 13.916 0 001.543-6.262c0-2.119-.79-4.222-1.543-6.262l-.054-.09M12 11v-1"></path></svg>
+        </div>
+        <button onclick="simulateVerification('Biometric Fingerprint')" class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700">Simulate Sensor Match</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 5. ADD EMPLOYEE MODAL -->
+<div id="add-employee-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden modal-overlay">
+  <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden modal-content transform transition-all duration-300 scale-95 opacity-0">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+      <h3 class="text-base font-bold text-slate-800 flex items-center">
+        <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+        Register New Employee
+      </h3>
+      <button onclick="closeModal('add-employee-modal')" class="text-slate-400 hover:text-slate-600 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    
+    <form action="/admin/add-employee" method="POST" class="p-6 space-y-4">
+      
+      <!-- Employee ID -->
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Employee ID</label>
+        <input type="text" name="employeeId" placeholder="e.g. EMP-011" required class="w-full text-sm border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl py-2 px-3">
+      </div>
+
+      <!-- Full Name -->
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
+        <input type="text" name="name" placeholder="e.g. Rahul Sen" required class="w-full text-sm border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl py-2 px-3">
+      </div>
+
+      <!-- Email Address -->
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label>
+        <input type="email" name="email" placeholder="e.g. rahul.sen@company.com" required class="w-full text-sm border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl py-2 px-3">
+      </div>
+
+      <!-- Department -->
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Department</label>
+        <select name="department" required class="w-full text-sm border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl py-2 px-3">
+          <option value="IT & Software">IT & Software</option>
+          <option value="Human Resources">Human Resources</option>
+          <option value="Finance">Finance</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Operations">Operations</option>
+          <option value="Sales">Sales</option>
+        </select>
+      </div>
+
+      <!-- System Role -->
+      <div>
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">System Access Role</label>
+        <select name="role" required class="w-full text-sm border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl py-2 px-3">
+          <option value="Employee" selected>Employee</option>
+          <option value="Manager">Manager</option>
+          <option value="HR">HR Manager</option>
+          <option value="Admin">Administrator</option>
+        </select>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="pt-4 border-t border-slate-100 flex justify-end space-x-3">
+        <button type="button" onclick="closeModal('add-employee-modal')" class="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50">Cancel</button>
+        <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-500/10">Save Employee</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  function switchBioTab(tab) {
+    const tabs = ['qr', 'face', 'biometric'];
+    tabs.forEach(t => {
+      document.getElementById(`bio-tab-${t}`).classList.add('hidden');
+      document.getElementById(`bio-tab-btn-${t}`).className = "flex-1 py-3 text-center border-b-2 border-transparent focus:outline-none";
+    });
+
+    document.getElementById(`bio-tab-${tab}`).classList.remove('hidden');
+    document.getElementById(`bio-tab-btn-${tab}`).className = "flex-1 py-3 text-center text-blue-600 border-b-2 border-blue-500 focus:outline-none";
+  }
+
+  function simulateVerification(type) {
+    closeModal('biometric-modal');
+    showToast(`${type} authenticated successfully!`, 'success');
+  }
+
+  let activeViewId = '';
+  // Opens the detailed layout modal and loads individual employee history
+  async function showAttendanceDetails(recordId, employeeId, date, checkIn, checkOut, status, late, overtime, location, notes, name, dept, avatar) {
+    activeViewId = recordId;
+    openModal('details-modal');
+    
+    // Inject HTML loader
+    const container = document.getElementById('details-modal-body');
+    container.innerHTML = `
+      <div class="flex items-center space-x-4 border-b border-slate-100 pb-4">
+        <img class="w-14 h-14 rounded-full border" src="${avatar}">
+        <div>
+          <h4 class="text-base font-bold text-slate-800">${name}</h4>
+          <p class="text-xs text-slate-500">${dept} • ID: ${employeeId}</p>
+        </div>
+        <div class="ml-auto">
+          <span class="px-2.5 py-1 text-xs font-semibold rounded-full ${
+            status === 'Present' ? 'bg-green-100 text-green-800' : 
+            status === 'Absent' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'
+          }">${status}</span>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <span class="block text-[10px] font-semibold text-slate-400 uppercase">Check In</span>
+          <span class="text-sm font-bold text-slate-700">${checkIn || '--'}</span>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <span class="block text-[10px] font-semibold text-slate-400 uppercase">Check Out</span>
+          <span class="text-sm font-bold text-slate-700">${checkOut || '--'}</span>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <span class="block text-[10px] font-semibold text-slate-400 uppercase">Status</span>
+          <span class="text-sm font-bold text-slate-700">${late === 'Late' ? 'Late Arrival' : 'On-Time'}</span>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <span class="block text-[10px] font-semibold text-slate-400 uppercase">Overtime</span>
+          <span class="text-sm font-bold text-slate-700">${overtime > 0 ? overtime + ' hrs' : '0'}</span>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Verification Diagnostics</h5>
+        <div class="text-sm space-y-2 text-slate-600">
+          <div class="flex justify-between py-1.5 border-b border-slate-50">
+            <span>Date Logged</span>
+            <span class="font-medium text-slate-700">${date}</span>
+          </div>
+          <div class="flex justify-between py-1.5 border-b border-slate-50">
+            <span>Geographic Location</span>
+            <span class="font-medium text-slate-700 flex items-center">
+              <svg class="w-4 h-4 text-rose-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              ${location || 'Office HQ'}
+            </span>
+          </div>
+          <div class="flex justify-between py-1.5 border-b border-slate-50">
+            <span>Audit Notes</span>
+            <span class="font-medium text-slate-700">${notes || 'No remarks recorded'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function triggerIndividualPDF() {
+    showToast("Generating print-friendly employee card PDF...", "info");
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  }
+
+  // Opens the edit modal with loaded values
+  function openEditModal(recordId, employeeId, name, dept, avatar, checkIn, checkOut, status, overtime, location, notes) {
+    document.getElementById('edit-record-id').value = recordId;
+    document.getElementById('edit-emp-avatar').src = avatar;
+    document.getElementById('edit-emp-name').innerText = name;
+    document.getElementById('edit-emp-meta').innerText = `${dept} • ID: ${employeeId}`;
+    document.getElementById('edit-checkin').value = checkIn || '';
+    document.getElementById('edit-checkout').value = checkOut || '';
+    document.getElementById('edit-status').value = status;
+    document.getElementById('edit-overtime').value = overtime || 0;
+    document.getElementById('edit-location').value = location || 'Office';
+    document.getElementById('edit-notes').value = notes || '';
+
+    openModal('edit-modal');
+  }
+</script>

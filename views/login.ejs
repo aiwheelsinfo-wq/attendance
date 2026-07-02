@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agni HRMS - Admin Login Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-slate-50 relative overflow-hidden">
+
+  <!-- Background decorative glows -->
+  <div class="absolute -top-40 -left-40 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"></div>
+  <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl"></div>
+
+  <!-- Login Card container -->
+  <div class="w-full max-w-md p-8 bg-white border border-slate-200 rounded-3xl soft-shadow z-10 relative">
+    
+    <!-- Branding Header -->
+    <div class="text-center mb-8">
+      <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold text-2xl mx-auto shadow-lg shadow-blue-500/20 mb-4">
+        A
+      </div>
+      <h2 class="text-xl font-bold text-slate-800">Agni HRMS Portal</h2>
+      <p class="text-xs text-slate-400 mt-1">Please enter your administrative credentials to log in</p>
+    </div>
+
+    <!-- Error Messages Alert -->
+    <% if (error) { %>
+      <div class="p-3.5 mb-6 bg-rose-50 border border-rose-100 text-rose-700 text-xs font-semibold rounded-2xl flex items-center space-x-2 animate-pulse">
+        <svg class="w-4 h-4 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <span><%= error %></span>
+      </div>
+    <% } %>
+
+    <!-- Success Messages Alert -->
+    <% if (message) { %>
+      <div class="p-3.5 mb-6 bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-semibold rounded-2xl flex items-center space-x-2">
+        <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span><%= message %></span>
+      </div>
+    <% } %>
+
+    <!-- Login Form -->
+    <form action="/login" method="POST" class="space-y-5">
+      
+      <!-- Email input -->
+      <div>
+        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 pl-1">Email Address</label>
+        <div class="relative">
+          <input type="email" name="email" required placeholder="e.g. agnicarrental@gmail.com" class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl py-3 px-4 pl-10 shadow-sm transition-all focus:ring-4 focus:ring-blue-500/10">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+        </div>
+      </div>
+
+      <!-- Password input -->
+      <div>
+        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 pl-1">Password</label>
+        <div class="relative">
+          <input type="password" name="password" required placeholder="••••••••" class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl py-3 px-4 pl-10 shadow-sm transition-all focus:ring-4 focus:ring-blue-500/10">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+      </div>
+
+      <!-- Submit button -->
+      <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-[1.01] active:scale-[0.99] mt-2">
+        Log In to System
+      </button>
+
+    </form>
+
+    <!-- Footer Copyright -->
+    <div class="mt-8 text-center text-[10px] text-slate-400">
+      &copy; 2026 Agni Systems. All rights reserved.
+    </div>
+
+  </div>
+
+</body>
+</html>

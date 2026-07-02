@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agni HRMS - Employee Self Attendance</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Calendar styles custom overrides -->
+  <style>
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+  <!-- Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main View -->
+  <div class="flex flex-col flex-1 min-w-0 overflow-y-auto">
+    
+    <!-- Top Nav -->
+    <%- include('partials/header') %>
+
+    <!-- Content Area -->
+    <main class="p-6 space-y-6">
+
+      <!-- Heading -->
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">Employee Self Service</h2>
+        <p class="text-xs text-slate-500">Record your daily work entries, check location tracking status, and review attendance logs</p>
+      </div>
+
+      <!-- Grid layout: Left forms, Right stats & calendar -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Realtime Clock and check-in panel -->
+        <div class="space-y-6 lg:col-span-1">
+          
+          <!-- Clock In/Out card -->
+          <div class="bg-white border border-slate-200 rounded-2xl soft-shadow p-6 space-y-6 relative overflow-hidden flex flex-col justify-between">
+            
+            <!-- Live Time display -->
+            <div class="text-center py-4 space-y-1">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Local Standard Time</span>
+              <h3 id="live-time-el" class="text-3xl font-extrabold text-slate-800 font-mono">00:00:00 AM</h3>
+              <p id="live-date-el" class="text-xs text-slate-500 font-medium">Thursday, July 2, 2026</p>
+            </div>
+
+            <!-- Status Banner -->
+            <div class="p-3.5 bg-slate-50 rounded-xl border text-center text-xs">
+              <% if (todayLog) { %>
+                <div class="space-y-1">
+                  <span class="font-semibold text-slate-700">Today's Status: </span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full font-bold <%= todayLog.status === 'Present' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' %>">
+                    <%= todayLog.status %>
+                  </span>
+                  <p class="text-[10px] text-slate-500 mt-1">
+                    Check-in: <%= todayLog.checkIn || '--' %> | Check-out: <%= todayLog.checkOut || '--' %>
+                  </p>
+                </div>
+              <% } else { %>
+                <span class="font-semibold text-slate-500">Not Clocked-In Yet</span>
+              <% } %>
+            </div>
+
+            <!-- Action Form -->
+            <% if (!todayLog) { %>
+              <!-- Clock In Form -->
+              <form action="/self-attendance/checkin" method="POST" class="space-y-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 mb-1">Check-In Notes</label>
+                  <input type="text" name="notes" placeholder="Optional comments..." class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl px-3 py-2">
+                </div>
+                <!-- Hidden location tracker -->
+                <input type="hidden" name="location" id="checkin-gps-input" value="Office">
+                
+                <button type="submit" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-500/10 flex items-center justify-center space-x-2 transition-all">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                  <span>Clock Check-In</span>
+                </button>
+              </form>
+            <% } else if (todayLog && !todayLog.checkOut) { %>
+              <!-- Clock Out Form -->
+              <form action="/self-attendance/checkout" method="POST" class="space-y-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-500 mb-1">Check-Out Remarks</label>
+                  <input type="text" name="notes" placeholder="Optional work status notes..." class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl px-3 py-2">
+                </div>
+                <button type="submit" class="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-rose-500/10 flex items-center justify-center space-x-2 transition-all">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h3"></path></svg>
+                  <span>Clock Check-Out</span>
+                </button>
+              </form>
+            <% } else { %>
+              <!-- Fully Completed Log for today -->
+              <button disabled class="w-full py-3 bg-slate-100 text-slate-400 rounded-xl text-sm font-semibold cursor-not-allowed flex items-center justify-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span>Attendance Log Complete</span>
+              </button>
+            <% } %>
+
+            <!-- GPS Info Panel -->
+            <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span class="flex items-center text-[10px]">
+                <svg class="w-4 h-4 text-rose-500 mr-1 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span id="gps-status-label">Auto GPS Zone Mapping</span>
+              </span>
+              <button onclick="triggerBiometricMockImport()" class="text-blue-600 font-semibold hover:underline">QR Device check</button>
+            </div>
+
+          </div>
+
+          <!-- Quick statistics KPI panel -->
+          <div class="grid grid-cols-2 gap-4">
+            
+            <!-- Circular Rate representation -->
+            <div class="bg-white border border-slate-200 rounded-2xl soft-shadow p-4 flex flex-col justify-between items-center text-center">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Rate Ratio</span>
+              
+              <!-- Simple Radial Circular CSS ring simulation -->
+              <div class="w-16 h-16 rounded-full flex items-center justify-center border-4 border-slate-100 mt-2 relative" style="border-top-color: #2563eb; transform: rotate(18deg)">
+                <span class="text-xs font-bold text-slate-700" style="transform: rotate(-18deg)"><%= stats.percentage %>%</span>
+              </div>
+              
+              <span class="text-xs text-slate-500 mt-2 font-medium">Clock-in accuracy</span>
+            </div>
+
+            <!-- Working Hours stats -->
+            <div class="bg-white border border-slate-200 rounded-2xl soft-shadow p-4 flex flex-col justify-between text-center items-center">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Worked Hours</span>
+              <h4 class="text-2xl font-black text-slate-800 mt-2"><%= stats.workingHours %></h4>
+              <span class="text-[10px] text-slate-400 font-medium">Hours logged this month</span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Right: Attendance Calendar & Historical timeline -->
+        <div class="lg:col-span-2 space-y-6">
+          
+          <!-- Monthly visual grid calendar -->
+          <div class="bg-white border border-slate-200 rounded-2xl soft-shadow p-6 flex flex-col">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-sm font-bold text-slate-800">Monthly Attendance Calendar</h3>
+                <p class="text-[10px] text-slate-400">Review status breakdowns (Green: On-Time, Yellow: Late, Purple: Leave, Red: Absent)</p>
+              </div>
+              <!-- Calendar Header Month details -->
+              <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl">July 2026</span>
+            </div>
+
+            <!-- Week labels -->
+            <div class="calendar-grid text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest pb-3 border-b border-slate-100 mb-2">
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
+
+            <!-- Calendar Days rendering box -->
+            <div id="calendar-days-container" class="calendar-grid gap-2 text-center text-xs">
+              <!-- Rendered via Client side JS -->
+            </div>
+            
+            <!-- Calendar legend -->
+            <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-4 justify-center text-[10px] font-semibold text-slate-500">
+              <span class="flex items-center"><span class="w-2.5 h-2.5 rounded bg-emerald-100 border border-emerald-300 mr-1.5"></span>On-Time</span>
+              <span class="flex items-center"><span class="w-2.5 h-2.5 rounded bg-amber-100 border border-amber-300 mr-1.5"></span>Late Arrival</span>
+              <span class="flex items-center"><span class="w-2.5 h-2.5 rounded bg-rose-100 border border-rose-300 mr-1.5"></span>Absent</span>
+              <span class="flex items-center"><span class="w-2.5 h-2.5 rounded bg-purple-100 border border-purple-300 mr-1.5"></span>On Leave</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Shared Modals overlay -->
+  <%- include('partials/modals') %>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/exports.js"></script>
+
+  <script>
+    // Live Ticking Clock
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      
+      const clockEl = document.getElementById('live-time-el');
+      const dateEl = document.getElementById('live-date-el');
+      
+      if (clockEl) clockEl.innerText = timeStr;
+      if (dateEl) dateEl.innerText = dateStr;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Map Geolocation coords automatically for check-in
+    document.addEventListener('DOMContentLoaded', () => {
+      getGPSLocation((err, coords) => {
+        if (!err && coords) {
+          const gpsLabel = document.getElementById('gps-status-label');
+          const gpsInput = document.getElementById('checkin-gps-input');
+          if (gpsLabel) gpsLabel.innerText = coords.substring(0, 22) + '...';
+          if (gpsInput) gpsInput.value = coords;
+        }
+      });
+      
+      // Render the calendar
+      renderSelfCalendar();
+    });
+
+    // Calendar Generation
+    function renderSelfCalendar() {
+      // Parse EJS string logs
+      const logs = <%- logs %>;
+      const logsMap = {};
+      logs.forEach(log => {
+        logsMap[log.date] = log;
+      });
+
+      const container = document.getElementById('calendar-days-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      // Target Month: July 2026
+      const year = 2026;
+      const month = 6; // 0-indexed (July)
+      
+      // First day of July 2026 falls on a Wednesday (getDay() = 3)
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      
+      // Total days in July: 31
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      // Render blanks for previous month pad
+      for (let i = 0; i < firstDayIndex; i++) {
+        const blank = document.createElement('div');
+        blank.className = 'py-3 text-slate-300';
+        blank.innerText = '';
+        container.appendChild(blank);
+      }
+
+      // Render days of target month
+      for (let day = 1; day <= totalDays; day++) {
+        const cell = document.createElement('div');
+        const dayStr = String(day).padStart(2, '0');
+        const dateKey = `2026-07-${dayStr}`;
+        const log = logsMap[dateKey];
+        
+        cell.className = 'py-2 rounded-xl border flex flex-col items-center justify-center font-semibold relative select-none hover:border-blue-400 cursor-pointer';
+
+        // Styling based on log status
+        if (log) {
+          if (log.status === 'Present') {
+            if (log.lateStatus === 'Late') {
+              cell.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-800');
+            } else {
+              cell.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+            }
+          } else if (log.status === 'Absent') {
+            cell.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-800');
+          } else if (log.status === 'Leave') {
+            cell.classList.add('bg-purple-50', 'border-purple-200', 'text-purple-800');
+          }
+        } else {
+          // Weekend check
+          const dayOfWeek = new Date(year, month, day).getDay();
+          if (dayOfWeek === 0 || dayOfWeek === 6) {
+            cell.classList.add('bg-slate-50', 'border-slate-100', 'text-slate-400');
+          } else {
+            cell.classList.add('bg-white', 'border-slate-200', 'text-slate-700');
+          }
+        }
+
+        cell.innerHTML = `<span>${day}</span>`;
+        
+        // Add click diagnostic
+        cell.onclick = () => {
+          if (log) {
+            showToast(`${log.date}: Checked in ${log.checkIn || 'none'}, Checkout ${log.checkOut || 'none'}. Location: ${log.location}`, 'info');
+          } else {
+            showToast(`${dateKey}: No roster checked`, 'info');
+          }
+        };
+
+        container.appendChild(cell);
+      }
+    }
+  </script>
+
+</body>
+</html>

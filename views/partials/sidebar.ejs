@@ -1,0 +1,102 @@
+<!-- Sidebar Drawer Overlay (mobile only) -->
+<div id="sidebar-overlay" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm hidden lg:hidden"></div>
+
+<!-- Sidebar Main Container -->
+<aside id="sidebar" class="fixed top-0 bottom-0 left-0 z-50 flex flex-col w-64 bg-slate-900 text-slate-400 border-r border-slate-800 transition-all duration-300 transform -translate-x-full lg:translate-x-0 lg:static no-print flex-shrink-0">
+  
+  <!-- Logo Branding Header -->
+  <div class="flex items-center justify-between h-16 px-6 bg-slate-950 border-b border-slate-800">
+    <div class="flex items-center space-x-3">
+      <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-blue-500/20">
+        A
+      </div>
+      <span id="logo-text" class="text-base font-bold text-white tracking-wide sidebar-label">Agni HRMS</span>
+    </div>
+    <!-- Desktop Collapse Button -->
+    <button id="sidebar-collapse" class="hidden lg:block p-1 text-slate-500 hover:text-white rounded-md focus:outline-none">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- User Quick Profile Card (when collapsed) -->
+  <div class="p-4 border-b border-slate-800 bg-slate-950/40 sidebar-label">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-full border border-slate-700 bg-slate-800 overflow-hidden">
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=<%= currentUser.username %>" alt="User" class="object-cover w-full h-full">
+      </div>
+      <div class="flex flex-col overflow-hidden">
+        <span class="text-sm font-semibold text-white truncate"><%= currentUser.username %></span>
+        <span class="text-xs text-slate-500 truncate"><%= currentUser.role %> Portal</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Menu items -->
+  <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+    
+    <!-- Dashboard -->
+    <a href="/dashboard" class="flex items-center px-4 py-3 rounded-xl transition-all duration-150 <%= activePath === '/dashboard' ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/10' : 'hover:bg-slate-800 hover:text-slate-100' %>">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path>
+      </svg>
+      <span class="ml-3 text-sm sidebar-label">Admin Dashboard</span>
+    </a>
+
+    <!-- Reports -->
+    <a href="/reports" class="flex items-center px-4 py-3 rounded-xl transition-all duration-150 <%= activePath === '/reports' ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/10' : 'hover:bg-slate-800 hover:text-slate-100' %>">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H3a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2v14a2 2 0 01-2 2z"></path>
+      </svg>
+      <span class="ml-3 text-sm sidebar-label">Export & Reports</span>
+    </a>
+
+    <!-- Mark Attendance -->
+    <a href="/mark-attendance" class="flex items-center px-4 py-3 rounded-xl transition-all duration-150 <%= activePath === '/mark-attendance' ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/10' : 'hover:bg-slate-800 hover:text-slate-100' %>">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+      </svg>
+      <span class="ml-3 text-sm sidebar-label">Mark Attendance</span>
+    </a>
+
+    <!-- Add Employee -->
+    <a href="/add-employee" class="flex items-center px-4 py-3 rounded-xl transition-all duration-150 <%= activePath === '/add-employee' ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/10' : 'hover:bg-slate-800 hover:text-slate-100' %>">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+      </svg>
+      <span class="ml-3 text-sm sidebar-label">Add Employee</span>
+    </a>
+
+    <!-- Self Attendance -->
+    <a href="/self-attendance" class="flex items-center px-4 py-3 rounded-xl transition-all duration-150 <%= activePath === '/self-attendance' ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/10' : 'hover:bg-slate-800 hover:text-slate-100' %>">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+      </svg>
+      <span class="ml-3 text-sm sidebar-label">Self Attendance</span>
+    </a>
+
+    <!-- Admin Settings & Uploads -->
+    <a href="/admin-settings" class="flex items-center px-4 py-3 rounded-xl transition-all duration-150 <%= activePath === '/admin-settings' ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/10' : 'hover:bg-slate-800 hover:text-slate-100' %>">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+      </svg>
+      <span class="ml-3 text-sm sidebar-label">System Control</span>
+    </a>
+
+    <!-- Log Out -->
+    <a href="/logout" class="flex items-center px-4 py-3 rounded-xl transition-all duration-150 hover:bg-rose-500/10 hover:text-rose-450 text-slate-400 group">
+      <svg class="w-5 h-5 flex-shrink-0 group-hover:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+      </svg>
+      <span class="ml-3 text-sm sidebar-label font-medium group-hover:text-rose-400">Log Out</span>
+    </a>
+
+  </nav>
+
+  <!-- Sidebar Footer: Role description -->
+  <div class="p-4 border-t border-slate-800 text-xs text-slate-500 text-center sidebar-label">
+    &copy; 2026 Agni Systems. v1.0.0
+  </div>
+</aside>

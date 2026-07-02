@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agni HRMS - Export Reports Workspace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+  <!-- Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main View -->
+  <div class="flex flex-col flex-1 min-w-0 overflow-y-auto">
+    
+    <!-- Top Nav -->
+    <%- include('partials/header') %>
+
+    <!-- Content Area -->
+    <main class="p-6 space-y-6">
+
+      <!-- Breadcrumbs and Exports toolbar -->
+      <div class="flex items-center justify-between no-print">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">HR Export & Reports Center</h2>
+          <p class="text-xs text-slate-500">Analyze attendance metrics, sum overtime logs, and generate company invoices/reports</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="exportTableToCSV('attendance_audit_log.csv')" class="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors inline-flex items-center">
+            <svg class="w-4 h-4 mr-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Export Excel
+          </button>
+          <button onclick="triggerPDFPrint()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/10 transition-colors inline-flex items-center">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-5a2 2 0 00-2-2H5a2 2 0 00-2 2v5a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            Export PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters Panel -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 soft-shadow no-print space-y-4">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Report Parameter Configuration</h3>
+        
+        <form action="/reports" method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 items-end">
+          
+          <!-- Period range -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Period Selection</label>
+            <select name="range" id="range-selector" onchange="toggleCustomDates(this.value)" class="w-full text-xs border-slate-200 rounded-xl px-3 py-2">
+              <option value="today" <%= filters.range === 'today' ? 'selected' : '' %>>Today</option>
+              <option value="weekly" <%= filters.range === 'weekly' ? 'selected' : '' %>>This Week</option>
+              <option value="monthly" <%= filters.range === 'monthly' ? 'selected' : '' %>>This Month</option>
+              <option value="custom" <%= filters.range === 'custom' ? 'selected' : '' %>>Custom Range</option>
+            </select>
+          </div>
+
+          <!-- Employee Name / ID Search -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Search Employee</label>
+            <input type="text" name="search" value="<%= filters.search || '' %>" placeholder="Name or ID..." class="w-full text-xs border-slate-200 focus:border-blue-500 rounded-xl px-3 py-2 shadow-sm">
+          </div>
+
+          <!-- Department filter -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Department</label>
+            <select name="department" class="w-full text-xs border-slate-200 rounded-xl px-3 py-2">
+              <option value="">All Departments</option>
+              <option value="IT & Software" <%= filters.department === 'IT & Software' ? 'selected' : '' %>>IT & Software</option>
+              <option value="Human Resources" <%= filters.department === 'Human Resources' ? 'selected' : '' %>>Human Resources</option>
+              <option value="Finance" <%= filters.department === 'Finance' ? 'selected' : '' %>>Finance</option>
+              <option value="Marketing" <%= filters.department === 'Marketing' ? 'selected' : '' %>>Marketing</option>
+              <option value="Operations" <%= filters.department === 'Operations' ? 'selected' : '' %>>Operations</option>
+              <option value="Sales" <%= filters.department === 'Sales' ? 'selected' : '' %>>Sales</option>
+            </select>
+          </div>
+
+          <!-- Status filter -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status</label>
+            <select name="status" class="w-full text-xs border-slate-200 rounded-xl px-3 py-2">
+              <option value="">All Statuses</option>
+              <option value="Present" <%= filters.status === 'Present' ? 'selected' : '' %>>Present</option>
+              <option value="Absent" <%= filters.status === 'Absent' ? 'selected' : '' %>>Absent</option>
+              <option value="Leave" <%= filters.status === 'Leave' ? 'selected' : '' %>>On Leave</option>
+            </select>
+          </div>
+
+          <!-- Custom Start Date -->
+          <div id="custom-start-wrapper" class="<%= filters.range === 'custom' ? '' : 'hidden' %>">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Start Date</label>
+            <input type="date" name="startDate" value="<%= filters.startDate %>" class="w-full text-xs border-slate-200 rounded-xl px-3 py-2">
+          </div>
+
+          <!-- Custom End Date -->
+          <div id="custom-end-wrapper" class="<%= filters.range === 'custom' ? '' : 'hidden' %>">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">End Date</label>
+            <input type="date" name="endDate" value="<%= filters.endDate %>" class="w-full text-xs border-slate-200 rounded-xl px-3 py-2">
+          </div>
+
+          <!-- Run report -->
+          <div>
+            <button type="submit" class="w-full py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-950 shadow-md shadow-slate-900/10 transition-colors">
+              Compile Logs
+            </button>
+          </div>
+
+        </form>
+
+      </section>
+
+      <!-- Summary KPI Block -->
+      <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        
+        <div class="p-4 bg-white border rounded-2xl text-center shadow-sm">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Days Present</span>
+          <h4 class="text-xl font-bold text-slate-800 mt-1"><%= summary.present %></h4>
+        </div>
+
+        <div class="p-4 bg-white border rounded-2xl text-center shadow-sm">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Days Absent</span>
+          <h4 class="text-xl font-bold text-slate-800 mt-1"><%= summary.absent %></h4>
+        </div>
+
+        <div class="p-4 bg-white border rounded-2xl text-center shadow-sm">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Late Arrivals</span>
+          <h4 class="text-xl font-bold text-amber-600 mt-1"><%= summary.late %></h4>
+        </div>
+
+        <div class="p-4 bg-white border rounded-2xl text-center shadow-sm">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Total Hours</span>
+          <h4 class="text-xl font-bold text-blue-600 mt-1"><%= summary.totalHours %> hrs</h4>
+        </div>
+
+        <div class="p-4 bg-white border rounded-2xl text-center shadow-sm">
+          <span class="text-[10px] font-bold text-slate-400 uppercase">Total Overtime</span>
+          <h4 class="text-xl font-bold text-purple-600 mt-1">+<%= summary.totalOvertime %> hrs</h4>
+        </div>
+
+      </section>
+
+      <!-- Main Report Preview Card -->
+      <section class="bg-white border border-slate-200 rounded-2xl soft-shadow print-card overflow-hidden flex flex-col">
+        
+        <!-- Printable header logo info -->
+        <div class="p-8 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50/50 print-border">
+          <div class="space-y-1">
+            <h1 class="text-xl font-bold text-slate-800">Agni Corporate Systems</h1>
+            <p class="text-xs text-slate-500">Sector 4, Core Business Zone, 400008</p>
+            <p class="text-[10px] text-slate-400 font-mono">REG CODE ID: HRMS-AGNI-0098</p>
+          </div>
+          <div class="text-left sm:text-right mt-4 sm:mt-0 space-y-1">
+            <h2 class="text-base font-bold text-blue-600">Attendance Audit Invoice</h2>
+            <p class="text-xs text-slate-500">Period: <%= filters.startDate %> to <%= filters.endDate %></p>
+            <p class="text-[10px] text-slate-400">Generated: <%= new Date().toLocaleDateString() %></p>
+          </div>
+        </div>
+
+        <!-- Roster table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm border-collapse" id="attendance-table-el">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th class="px-6 py-3.5">Date</th>
+                <th class="px-6 py-3.5">Employee ID</th>
+                <th class="px-6 py-3.5">Name</th>
+                <th class="px-6 py-3.5">Department</th>
+                <th class="px-6 py-3.5">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <% if (attendanceList.length > 0) { %>
+                <% attendanceList.forEach(log => { %>
+                  <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-3 whitespace-nowrap font-mono text-xs text-slate-600"><%= log.date %></td>
+                    <td class="px-6 py-3 whitespace-nowrap font-mono text-xs text-slate-600"><%= log.employeeId %></td>
+                    <td class="px-6 py-3 whitespace-nowrap font-semibold text-slate-700"><%= log.employee.name %></td>
+                    <td class="px-6 py-3 whitespace-nowrap text-slate-500"><%= log.employee.department %></td>
+                    <td class="px-6 py-3 whitespace-nowrap">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold <%= log.status === 'Present' ? 'bg-emerald-50 text-emerald-800 border-emerald-200 border' : (log.status === 'Absent' ? 'bg-rose-50 text-rose-800 border-rose-200 border' : 'bg-purple-50 text-purple-800 border-purple-200 border') %>">
+                        <%= log.status %>
+                      </span>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                    No logs logged inside compiled parameters
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Authorized Signature & generation dates (Printed layout) -->
+        <div class="hidden print-only mt-24 px-8 pb-12 flex justify-between items-end">
+          <div class="text-center w-48 border-t border-slate-400 pt-2">
+            <p class="text-xs font-bold text-slate-700">Audit Desk Signature</p>
+            <p class="text-[10px] text-slate-400">Agni Corporate HR</p>
+          </div>
+          <div class="text-center w-48 border-t border-slate-400 pt-2">
+            <p class="text-xs font-bold text-slate-700">Audit Date</p>
+            <p class="text-[10px] text-slate-400"><%= new Date().toLocaleDateString() %></p>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <%- include('partials/modals') %>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/exports.js"></script>
+
+  <script>
+    function toggleCustomDates(val) {
+      const start = document.getElementById('custom-start-wrapper');
+      const end = document.getElementById('custom-end-wrapper');
+
+      if (val === 'custom') {
+        start.classList.remove('hidden');
+        end.classList.remove('hidden');
+      } else {
+        start.classList.add('hidden');
+        end.classList.add('hidden');
+      }
+    }
+  </script>
+
+</body>
+</html>

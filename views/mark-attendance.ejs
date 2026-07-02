@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agni HRMS - Mark Attendance & Roster</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+  <!-- Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main View -->
+  <div class="flex flex-col flex-1 min-w-0 overflow-y-auto">
+    
+    <!-- Top Nav -->
+    <%- include('partials/header') %>
+
+    <!-- Content Workspace -->
+    <main class="p-6 space-y-6 w-full">
+
+      <!-- Breadcrumbs and title -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-800">Mark Attendance Roster</h2>
+          <p class="text-sm text-slate-500">Log daily attendance statuses and inspect today's registry records side-by-side</p>
+        </div>
+        <a href="/dashboard" class="px-5 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors">
+          Back to Dashboard
+        </a>
+      </div>
+
+      <!-- Two-Column Grid: Form Left, Daily Log Directory Right -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        
+        <!-- Left: Form Card (1/3 width) -->
+        <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl soft-shadow overflow-hidden">
+          
+          <!-- Header Banner -->
+          <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div class="flex items-center space-x-3">
+              <span class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+              </span>
+              <div>
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Attendance Marking</h3>
+                <p class="text-xs text-slate-400 font-medium">Save log values for today</p>
+              </div>
+            </div>
+          </div>
+
+          <form action="/mark-attendance" method="POST" id="manual-attendance-form" class="p-6 space-y-6">
+            
+            <!-- Hidden inputs to default location and overtime to backend parameters -->
+            <input type="hidden" name="checkIn" id="checkin-time-input" value="09:00 AM">
+            <input type="hidden" name="checkOut" id="checkout-time-input" value="06:00 PM">
+            <input type="hidden" name="location" value="Office">
+            <input type="hidden" name="overtime" value="0">
+
+            <!-- Custom Choose Employee Dropdown Selector -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 pl-1">Employee Profile</label>
+              
+              <div class="relative" id="custom-employee-dropdown">
+                
+                <!-- Trigger Button -->
+                <button type="button" onclick="toggleEmployeeDropdown()" id="employee-dropdown-trigger" class="w-full flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl shadow-sm text-left hover:bg-slate-100/50 hover:border-slate-300 transition-all focus:ring-4 focus:ring-blue-500/10">
+                  <div class="flex items-center space-x-3.5 overflow-hidden">
+                    <div class="w-10 h-10 rounded-full border border-slate-200 bg-white overflow-hidden flex-shrink-0">
+                      <img id="dropdown-selected-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=select" class="w-full h-full object-cover">
+                    </div>
+                    <div class="overflow-hidden">
+                      <span id="dropdown-selected-name" class="block text-sm font-bold text-slate-800 truncate">-- Choose Employee --</span>
+                      <span id="dropdown-selected-dept" class="block text-[11px] text-slate-400 mt-1 truncate">No Selection</span>
+                    </div>
+                  </div>
+                  <svg class="w-5 h-5 text-slate-400 transition-transform duration-200" id="dropdown-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+
+                <!-- Hidden Input for Form Submission -->
+                <input type="hidden" name="employeeId" id="employee-select-el" required>
+
+                <!-- Floating Dropdown Panel -->
+                <div id="employee-dropdown-panel" class="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-30 hidden overflow-hidden transition-all duration-150 transform scale-95 opacity-0 origin-top">
+                  <!-- Search Box -->
+                  <div class="p-3.5 border-b border-slate-100 bg-slate-50/50 relative">
+                    <input type="text" id="dropdownSearchInput" onkeyup="filterDropdownList()" placeholder="Type to search..." class="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-blue-500 text-sm rounded-xl shadow-inner focus:outline-none">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-6 top-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                  </div>
+                  
+                  <!-- Employee Options List -->
+                  <div class="max-h-60 overflow-y-auto divide-y divide-slate-100" id="dropdown-options-list">
+                    <% employeesList.forEach(emp => { %>
+                      <div onclick="selectEmployeeOption('<%= emp.employeeId %>', '<%= emp.name %>', '<%= emp.department %>', '<%= emp.avatar %>')" class="flex items-center space-x-3.5 p-4 hover:bg-slate-50 cursor-pointer transition-colors dropdown-option-item" data-name="<%= emp.name.toLowerCase() %>" data-id="<%= emp.employeeId.toLowerCase() %>" data-dept="<%= emp.department.toLowerCase() %>">
+                        <div class="w-9 h-9 rounded-full overflow-hidden border border-slate-200 bg-slate-100 flex-shrink-0">
+                          <img src="<%= emp.avatar %>" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                          <span class="block text-sm font-bold text-slate-800 truncate"><%= emp.name %></span>
+                          <span class="block text-xs text-slate-400 truncate mt-0.5"><%= emp.department %> • <%= emp.employeeId %></span>
+                        </div>
+                      </div>
+                    <% }) %>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Date selection -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 pl-1">Log Date</label>
+              <input type="date" name="date" value="<%= todayDate %>" required class="w-full text-sm border-slate-200 focus:border-blue-500 rounded-xl py-3 px-4 shadow-sm">
+            </div>
+
+            <!-- Status Pill Selector -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5 pl-1">Attendance Status</label>
+              <div class="flex p-1.5 bg-slate-100 rounded-xl space-x-1.5 border border-slate-200/50">
+                <button type="button" onclick="selectStatus('Present')" id="status-btn-Present" class="flex-1 py-3 text-center text-sm font-bold rounded-lg transition-all shadow-sm bg-white text-emerald-600">
+                  Present
+                </button>
+                <button type="button" onclick="selectStatus('Absent')" id="status-btn-Absent" class="flex-1 py-3 text-center text-sm font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700">
+                  Absent
+                </button>
+                <button type="button" onclick="selectStatus('Leave')" id="status-btn-Leave" class="flex-1 py-3 text-center text-sm font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700">
+                  Leave
+                </button>
+                <!-- Hidden input to hold the actual selected status value -->
+                <input type="hidden" name="status" id="status-input-el" value="Present">
+              </div>
+            </div>
+
+            <!-- Late Arrival toggle switch -->
+            <div id="late-toggle-wrapper" class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200/60 transition-all">
+              <div>
+                <span class="block text-sm font-bold text-slate-700">Flag as Late Arrival</span>
+                <span class="block text-xs text-slate-400 mt-0.5">Override checkin status to Late</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer select-none">
+                <input type="checkbox" name="lateArrival" id="late-arrival-toggle" class="sr-only peer">
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
+            </div>
+
+            <!-- Notes -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 pl-1">Notes / Audit Remarks</label>
+              <textarea name="notes" rows="4" placeholder="Optional audit comments or explanation notes..." class="w-full text-sm border-slate-200 focus:border-blue-500 rounded-xl p-3.5 shadow-sm"></textarea>
+            </div>
+
+            <!-- Save & Reset Buttons -->
+            <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+              <button type="button" onclick="resetForm()" class="px-5 py-3 border border-slate-200 text-slate-600 bg-white rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors">Reset Form</button>
+              <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md shadow-blue-500/10 transition-colors">Save Log</button>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- Right: Today's Attendance Checklist Column (2/3 width) -->
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl soft-shadow overflow-hidden flex flex-col">
+          
+          <!-- Table Header -->
+          <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-800">Today's Attendance Checklist</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Roster tracking for date: <%= todayDate %></p>
+            </div>
+            <!-- Search bar -->
+            <div class="relative w-full sm:w-80">
+              <input type="text" id="employeeSearch" onkeyup="filterEmployeeList()" placeholder="Search employee by name, id..." class="w-full pl-9 pr-4 py-2 border-slate-200 focus:border-blue-500 text-xs rounded-xl shadow-sm">
+              <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm border-collapse" id="employeeTable">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th class="px-6 py-4">Employee</th>
+                  <th class="px-6 py-4">Employee ID</th>
+                  <th class="px-6 py-4">Department</th>
+                  <th class="px-6 py-4 text-center">Status</th>
+                  <th class="px-6 py-4 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <% employeesList.forEach(emp => { %>
+                  <% const log = todayLogsMap[emp.employeeId]; %>
+                  <tr class="hover:bg-slate-50/30 transition-all font-semibold employee-row cursor-pointer text-sm" onclick="onRowClick('<%= emp.employeeId %>', '<%= emp.name %>', '<%= emp.department %>', '<%= emp.avatar %>')">
+                    <td class="px-6 py-4.5 whitespace-nowrap flex items-center space-x-3.5">
+                      <div class="w-10 h-10 rounded-full overflow-hidden border border-slate-200 bg-slate-100 flex-shrink-0">
+                        <img src="<%= emp.avatar %>" class="w-full h-full object-cover">
+                      </div>
+                      <span class="font-bold text-slate-800 name-col"><%= emp.name %></span>
+                    </td>
+                    <td class="px-6 py-4.5 whitespace-nowrap font-mono text-xs text-slate-500 id-col"><%= emp.employeeId %></td>
+                    <td class="px-6 py-4.5 whitespace-nowrap text-slate-500 dept-col"><%= emp.department %></td>
+                    <td class="px-6 py-4.5 whitespace-nowrap text-center">
+                      <% if (log) { %>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold <%= 
+                          log.status === 'Present' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                          log.status === 'Absent' ? 'bg-rose-50 text-rose-700 border border-rose-100' :
+                          'bg-purple-50 text-purple-700 border border-purple-100' %>">
+                          <%= log.status %>
+                        </span>
+                      <% } else { %>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-50 text-slate-400 border border-slate-200">
+                          Pending
+                        </span>
+                      <% } %>
+                    </td>
+                    <td class="px-6 py-4.5 whitespace-nowrap text-center">
+                      <button onclick="event.stopPropagation(); deleteEmployeeRecord('<%= emp.employeeId %>')" class="p-1.5 text-red-400 hover:text-red-600 transition-colors" title="Delete Profile">
+                        <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      </button>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <%- include('partials/modals') %>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/exports.js"></script>
+
+  <script>
+    // Custom Dropdown search toggling
+    function toggleEmployeeDropdown() {
+      const panel = document.getElementById('employee-dropdown-panel');
+      const chevron = document.getElementById('dropdown-chevron');
+      
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        setTimeout(() => {
+          panel.classList.remove('scale-95', 'opacity-0');
+          panel.classList.add('scale-100', 'opacity-100');
+        }, 10);
+        chevron.classList.add('rotate-180');
+        document.getElementById('dropdownSearchInput').focus();
+      } else {
+        closeEmployeeDropdown();
+      }
+    }
+
+    function closeEmployeeDropdown() {
+      const panel = document.getElementById('employee-dropdown-panel');
+      const chevron = document.getElementById('dropdown-chevron');
+      panel.classList.remove('scale-100', 'opacity-100');
+      panel.classList.add('scale-95', 'opacity-0');
+      chevron.classList.remove('rotate-180');
+      setTimeout(() => {
+        panel.classList.add('hidden');
+      }, 150);
+    }
+
+    // Handles option selection
+    function selectEmployeeOption(id, name, department, avatar) {
+      document.getElementById('employee-select-el').value = id;
+      document.getElementById('dropdown-selected-avatar').src = avatar;
+      document.getElementById('dropdown-selected-name').innerText = name;
+      document.getElementById('dropdown-selected-dept').innerText = `${department} (${id})`;
+      closeEmployeeDropdown();
+    }
+
+    // Handles clicking rows on table
+    function onRowClick(empId, name, dept, avatar) {
+      selectEmployeeOption(empId, name, dept, avatar);
+      showToast(`Selected employee ${name} (${empId})`, 'info');
+    }
+
+    // Dropdown panel search filter
+    function filterDropdownList() {
+      const input = document.getElementById('dropdownSearchInput');
+      const filter = input.value.toLowerCase();
+      const items = document.querySelectorAll('.dropdown-option-item');
+
+      items.forEach(item => {
+        const name = item.getAttribute('data-name');
+        const id = item.getAttribute('data-id');
+        const dept = item.getAttribute('data-dept');
+        if (name.includes(filter) || id.includes(filter) || dept.includes(filter)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    // Document click to close custom dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const dropdown = document.getElementById('custom-employee-dropdown');
+      if (dropdown && !dropdown.contains(event.target)) {
+        closeEmployeeDropdown();
+      }
+    });
+
+    // Modern Tab selector for status
+    function selectStatus(status) {
+      document.getElementById('status-input-el').value = status;
+      
+      const statuses = ['Present', 'Absent', 'Leave'];
+      statuses.forEach(s => {
+        const btn = document.getElementById(`status-btn-${s}`);
+        if (s === status) {
+          btn.classList.add('bg-white', 'shadow-sm');
+          if (s === 'Present') {
+            btn.classList.add('text-emerald-600');
+            btn.classList.remove('text-slate-500', 'text-rose-600', 'text-purple-600');
+          } else if (s === 'Absent') {
+            btn.classList.add('text-rose-600');
+            btn.classList.remove('text-slate-500', 'text-emerald-600', 'text-purple-600');
+          } else {
+            btn.classList.add('text-purple-600');
+            btn.classList.remove('text-slate-500', 'text-emerald-600', 'text-rose-600');
+          }
+        } else {
+          btn.classList.remove('bg-white', 'shadow-sm', 'text-emerald-600', 'text-rose-600', 'text-purple-600');
+          btn.classList.add('text-slate-500');
+        }
+      });
+
+      // Toggle late switch wrapper visibility
+      const lateWrapper = document.getElementById('late-toggle-wrapper');
+      if (status === 'Present') {
+        lateWrapper.classList.remove('hidden');
+      } else {
+        lateWrapper.classList.add('hidden');
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('manual-attendance-form').reset();
+      document.getElementById('employee-select-el').value = '';
+      document.getElementById('dropdown-selected-avatar').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=select";
+      document.getElementById('dropdown-selected-name').innerText = "-- Choose Employee --";
+      document.getElementById('dropdown-selected-dept').innerText = "No Selection";
+      selectStatus('Present');
+      document.getElementById('late-arrival-toggle').checked = false;
+    }
+
+    // Client side search
+    function filterEmployeeList() {
+      const input = document.getElementById('employeeSearch');
+      const filter = input.value.toLowerCase();
+      const rows = document.querySelectorAll('.employee-row');
+
+      rows.forEach(row => {
+        const name = row.querySelector('.name-col').textContent.toLowerCase();
+        const id = row.querySelector('.id-col').textContent.toLowerCase();
+        const dept = row.querySelector('.dept-col').textContent.toLowerCase();
+        
+        if (name.includes(filter) || id.includes(filter) || dept.includes(filter)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    async function deleteEmployeeRecord(employeeId) {
+      if (!confirm(`Are you sure you want to delete employee ${employeeId} permanently? This will also clear all their attendance logs and records from the database.`)) return;
+      try {
+        const res = await fetch(`/admin/delete-employee/${employeeId}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Employee profile deleted successfully', 'success');
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          showToast('Delete failed: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('Network error during deletion', 'error');
+      }
+    }
+  </script>
+
+</body>
+</html>

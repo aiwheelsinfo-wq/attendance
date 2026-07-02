@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agni HRMS - System Administration Control</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+  <!-- Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main View -->
+  <div class="flex flex-col flex-1 min-w-0 overflow-y-auto">
+    
+    <!-- Top Nav -->
+    <%- include('partials/header') %>
+
+    <!-- Content Workspace -->
+    <main class="p-6 space-y-6 max-w-6xl mx-auto w-full">
+
+      <!-- Breadcrumbs and title -->
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">System Administration Control</h2>
+        <p class="text-xs text-slate-500">Configure core database parameters, import bulk rosters, and view audit trail records</p>
+      </div>
+
+      <!-- Config Grid: Lock and Bulk Upload -->
+      <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Attendance Lock Configuration -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 soft-shadow flex flex-col justify-between">
+          <div class="space-y-2">
+            <h3 class="text-sm font-bold text-slate-800 flex items-center">
+              <svg class="w-5 h-5 text-slate-500 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+              Attendance Modification Lock
+            </h3>
+            <p class="text-xs text-slate-400">Lock attendance modifications older than a specific amount of days to ensure compliance and prevent historical logs tapering.</p>
+          </div>
+
+          <form action="/admin/lock" method="POST" class="mt-6 space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Lock Period (Days)</label>
+              <select name="days" class="w-full text-xs border-slate-200 rounded-xl px-3 py-2">
+                <option value="3">3 Days (Strict HR Policy)</option>
+                <option value="7" selected>7 Days (Standard HR Policy)</option>
+                <option value="15">15 Days</option>
+                <option value="30">30 Days</option>
+              </select>
+            </div>
+            <button type="submit" class="w-full py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-950 transition-colors">
+              Apply Modification Lock
+            </button>
+          </form>
+        </div>
+
+        <!-- Bulk Attendance Importer -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 soft-shadow space-y-4">
+          <div class="flex justify-between items-start">
+            <div class="space-y-1">
+              <h3 class="text-sm font-bold text-slate-800 flex items-center">
+                <svg class="w-5 h-5 text-blue-600 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Bulk CSV Importer
+              </h3>
+              <p class="text-xs text-slate-400">Import hundreds of attendance logs at once via a standard CSV file.</p>
+            </div>
+            <button onclick="downloadSampleCSV()" class="text-[10px] text-blue-600 font-bold hover:underline" title="Download Excel Template">
+              Download Template
+            </button>
+          </div>
+
+          <!-- File upload drag simulator -->
+          <div class="border-2 border-dashed border-blue-200 hover:border-blue-400 rounded-xl p-6 text-center cursor-pointer bg-blue-50/20 transition-all relative overflow-hidden" onclick="triggerFileInput()">
+            <input type="file" id="csv-file-input" accept=".csv" class="hidden" onchange="handleCSVFile(this)">
+            <svg class="w-8 h-8 text-blue-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+            <span class="block text-xs font-semibold text-slate-700">Click to select CSV report</span>
+            <span class="block text-[10px] text-slate-400 mt-1">Accepts UTF-8 comma separated columns</span>
+          </div>
+
+          <!-- Parsing preview details -->
+          <form action="/admin/bulk-upload" method="POST" id="bulk-upload-form" class="hidden space-y-3">
+            <input type="hidden" name="recordsJson" id="records-json-input">
+            <div class="p-3 bg-slate-50 border rounded-xl max-h-36 overflow-y-auto text-xs space-y-1.5" id="csv-preview-list">
+              <!-- Content injected via JS -->
+            </div>
+            <div class="flex items-center justify-between">
+              <span id="csv-count-label" class="text-[10px] text-slate-500 font-semibold"></span>
+              <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold">
+                Confirm Import Data
+              </button>
+            </div>
+          </form>
+
+        </div>
+
+      </section>
+
+      <!-- Audit trail registry (Full width) -->
+      <section class="bg-white border border-slate-200 rounded-2xl soft-shadow overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">Administrative Logs Trail</h3>
+            <p class="text-[10px] text-slate-400">Chronological trail of edits, configurations, and user actions</p>
+          </div>
+          <span class="text-xs font-semibold px-2.5 py-0.5 bg-slate-100 text-slate-600 rounded-full border border-slate-200">
+            Audit Trails
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th class="px-6 py-3.5">User</th>
+                <th class="px-6 py-3.5">Action Event</th>
+                <th class="px-6 py-3.5">Description Details</th>
+                <th class="px-6 py-3.5">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium">
+              <% if (auditLogs.length > 0) { %>
+                <% auditLogs.forEach(log => { %>
+                  <tr class="hover:bg-slate-50/30">
+                    <td class="px-6 py-3 whitespace-nowrap text-slate-800 font-semibold flex items-center space-x-2">
+                      <div class="w-6 h-6 rounded-full overflow-hidden border bg-slate-100 flex-shrink-0">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=<%= log.user %>" class="w-full h-full object-cover">
+                      </div>
+                      <span><%= log.user %></span>
+                    </td>
+                    <td class="px-6 py-3 whitespace-nowrap text-slate-700">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold <%= 
+                        log.action.includes('Edit') ? 'bg-amber-50 text-amber-800 border border-amber-100' :
+                        log.action.includes('Delete') ? 'bg-rose-50 text-rose-800 border border-rose-100' :
+                        'bg-blue-50 text-blue-800 border border-blue-100' %>">
+                        <%= log.action %>
+                      </span>
+                    </td>
+                    <td class="px-6 py-3 text-slate-500 max-w-xs truncate" title="<%= log.details %>"><%= log.details %></td>
+                    <td class="px-6 py-3 whitespace-nowrap font-mono text-xs text-slate-400">
+                      <%= new Date(log.timestamp).toLocaleString() %>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="4" class="px-6 py-8 text-center text-slate-400">
+                    No actions logged in trails yet.
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <%- include('partials/modals') %>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/exports.js"></script>
+
+  <script>
+    function triggerFileInput() {
+      document.getElementById('csv-file-input').click();
+    }
+
+    // Handles CSV loading client side and validates columns
+    function handleCSVFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        try {
+          const records = parseCSVInput(text);
+          if (records.length === 0) {
+            showToast('CSV file is empty or malformed', 'error');
+            return;
+          }
+
+          // Validate headers match employeeId & date
+          const expectedHeaders = ['employeeId', 'date', 'status'];
+          const fileHeaders = Object.keys(records[0]);
+          const isValid = expectedHeaders.every(h => fileHeaders.includes(h));
+          
+          if (!isValid) {
+            showToast('Invalid CSV: Must contain "employeeId", "date", and "status" columns', 'error');
+            return;
+          }
+
+          // Build preview drawer
+          const form = document.getElementById('bulk-upload-form');
+          const previewList = document.getElementById('csv-preview-list');
+          const jsonInput = document.getElementById('records-json-input');
+          const countLabel = document.getElementById('csv-count-label');
+
+          previewList.innerHTML = '';
+          records.forEach(r => {
+            const item = document.createElement('div');
+            item.className = 'py-1 border-b border-slate-100 flex justify-between';
+            item.innerHTML = `
+              <span class="font-mono text-slate-600 font-bold">${r.employeeId} (${r.date})</span>
+              <span class="font-semibold text-slate-500">Status: ${r.status} | In: ${r.checkIn || '--'}</span>
+            `;
+            previewList.appendChild(item);
+          });
+
+          // Bind JSON data
+          jsonInput.value = JSON.stringify(records);
+          countLabel.innerText = `Compiled ${records.length} records successfully.`;
+          form.classList.remove('hidden');
+          showToast('CSV parsed successfully. Review data preview before importing.', 'info');
+
+        } catch (err) {
+          showToast('Failed to parse CSV: ' + err.message, 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Download Sample CSV template helper
+    function downloadSampleCSV() {
+      const template = "employeeId,date,checkIn,checkOut,status,location,notes,overtime\nEMP-001,2026-07-02,08:45 AM,05:45 PM,Present,Office,On time log,0\nEMP-002,2026-07-02,09:15 AM,06:00 PM,Present,Office,Late Check-in,0\nEMP-004,2026-07-02,,,Leave,Office,Sick leave,0\n";
+      const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      if (link.download !== undefined) {
+        link.setAttribute("href", URL.createObjectURL(blob));
+        link.setAttribute("download", "attendance_bulk_template.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('CSV Template downloaded successfully', 'success');
+      }
+    }
+  </script>
+
+</body>
+</html>

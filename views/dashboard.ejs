@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agni HRMS - Attendance Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="flex h-screen overflow-hidden bg-slate-50">
+
+  <!-- Sidebar Partial -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main View Area -->
+  <div class="flex flex-col flex-1 min-w-0 overflow-y-auto">
+    
+    <!-- Top Header Navigation -->
+    <%- include('partials/header') %>
+
+    <!-- Main Workspace Content -->
+    <main class="p-6 space-y-6">
+
+      <!-- Demo Banner if offline -->
+      <% if (!dbStatus.connected) { %>
+        <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between shadow-sm animate-fade-in no-print">
+          <div class="flex items-center space-x-3">
+            <span class="p-2 bg-amber-100 text-amber-800 rounded-xl">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </span>
+            <div>
+              <h4 class="text-sm font-bold text-amber-900">Demo Environment Active (Database Offline)</h4>
+              <p class="text-xs text-amber-700">Changes are hosted in-memory. Modify the <code class="bg-amber-100/50 px-1 py-0.5 rounded text-amber-900 font-mono font-bold">.env</code> configurations with your MongoDB Atlas Cluster URL to persist records permanently.</p>
+            </div>
+          </div>
+          <button onclick="openModal('db-info-modal')" class="px-3 py-1.5 bg-amber-800 hover:bg-amber-950 text-white rounded-xl text-xs font-semibold transition-colors">Setup database</button>
+        </div>
+      <% } %>
+
+      <!-- 1. Top Statistics Cards Grid -->
+      <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 no-print">
+        
+        <!-- Total Employees -->
+        <div class="p-4 bg-white rounded-2xl border border-slate-200 soft-shadow flex flex-col justify-between hover:border-blue-300 transition-all group">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-slate-500">Total Rosters</span>
+            <span class="p-2 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            </span>
+          </div>
+          <div class="mt-4">
+            <h3 class="text-2xl font-bold text-slate-800"><%= stats.totalEmployees %></h3>
+            <p class="text-[10px] text-slate-400 font-medium">Registered Active Staff</p>
+          </div>
+        </div>
+
+        <!-- Present Today -->
+        <div class="p-4 bg-white rounded-2xl border border-slate-200 soft-shadow flex flex-col justify-between hover:border-emerald-300 transition-all group">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-slate-500">Present Today</span>
+            <span class="p-2 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </span>
+          </div>
+          <div class="mt-4">
+            <h3 class="text-2xl font-bold text-slate-800"><%= stats.presentToday %></h3>
+            <p class="text-[10px] text-emerald-600 font-medium">Clocked in today</p>
+          </div>
+        </div>
+
+        <!-- Absent Today -->
+        <div class="p-4 bg-white rounded-2xl border border-slate-200 soft-shadow flex flex-col justify-between hover:border-red-300 transition-all group">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-slate-500">Absent Today</span>
+            <span class="p-2 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-rose-50 group-hover:text-rose-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </span>
+          </div>
+          <div class="mt-4">
+            <h3 class="text-2xl font-bold text-slate-800"><%= stats.absentToday %></h3>
+            <p class="text-[10px] text-rose-600 font-medium">Not registered yet</p>
+          </div>
+        </div>
+
+        <!-- Late Arrivals -->
+        <div class="p-4 bg-white rounded-2xl border border-slate-200 soft-shadow flex flex-col justify-between hover:border-amber-300 transition-all group">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-slate-500">Late Arrivals</span>
+            <span class="p-2 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </span>
+          </div>
+          <div class="mt-4">
+            <h3 class="text-2xl font-bold text-slate-800"><%= stats.lateToday %></h3>
+            <p class="text-[10px] text-amber-600 font-medium">> 09:00 AM checkin</p>
+          </div>
+        </div>
+
+        <!-- On Leave -->
+        <div class="p-4 bg-white rounded-2xl border border-slate-200 soft-shadow flex flex-col justify-between hover:border-purple-300 transition-all group">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-slate-500">On Leave</span>
+            <span class="p-2 bg-slate-100 text-slate-600 rounded-xl group-hover:bg-purple-50 group-hover:text-purple-600 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </span>
+          </div>
+          <div class="mt-4">
+            <h3 class="text-2xl font-bold text-slate-800"><%= stats.leaveToday %></h3>
+            <p class="text-[10px] text-purple-600 font-medium">Approved leaves today</p>
+          </div>
+        </div>
+
+        <!-- Attendance Percentage -->
+        <div class="p-4 bg-blue-600 text-white rounded-2xl soft-shadow flex flex-col justify-between relative overflow-hidden group">
+          <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-500/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-300"></div>
+          <div class="flex justify-between items-center z-10">
+            <span class="text-xs font-semibold text-blue-100">Rate Status</span>
+            <span class="p-1.5 bg-blue-500 rounded-lg text-white">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            </span>
+          </div>
+          <div class="mt-4 z-10">
+            <h3 class="text-2xl font-bold leading-tight"><%= stats.percentage %>%</h3>
+            <p class="text-[10px] text-blue-200 font-medium">Attendance Ratio Today</p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- 2. Attendance Summary Charts Section -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print">
+        
+        <!-- Daily attendance line chart (2/3 width) -->
+        <div class="lg:col-span-2 p-5 bg-white rounded-2xl border border-slate-200 soft-shadow flex flex-col h-80">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">Weekly Attendance Dynamics</h3>
+              <p class="text-[10px] text-slate-400">Headcount timeline logs over the past 7 active workdays</p>
+            </div>
+          </div>
+          <div class="flex-1 relative">
+            <canvas id="dailyLineChartEl"></canvas>
+          </div>
+        </div>
+
+        <!-- Department Headcount (1/3 width) -->
+        <div class="p-5 bg-white rounded-2xl border border-slate-200 soft-shadow flex flex-col h-80">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">Department Distribution</h3>
+              <p class="text-[10px] text-slate-400">Distribution of company roster headcounts</p>
+            </div>
+          </div>
+          <div class="flex-1 relative flex items-center justify-center">
+            <canvas id="deptPieChartEl"></canvas>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Monthly Overview Comparative Chart (Full width) -->
+      <section class="p-5 bg-white rounded-2xl border border-slate-200 soft-shadow flex flex-col h-72 no-print">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800">Monthly Comparative Analysis</h3>
+            <p class="text-[10px] text-slate-400">Overview comparison of Present vs. Absent days averaged</p>
+          </div>
+        </div>
+        <div class="flex-1 relative">
+          <canvas id="monthlyBarChartEl"></canvas>
+        </div>
+      </section>
+
+      <!-- 3. Employee Attendance Table & Filter Card -->
+      <section class="bg-white rounded-2xl border border-slate-200 soft-shadow overflow-hidden flex flex-col">
+        
+        <!-- Filter Header -->
+        <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 no-print">
+          
+          <!-- Search and inputs -->
+          <form action="/dashboard" method="GET" class="flex flex-col sm:flex-row flex-1 gap-2.5 items-stretch">
+            
+            <!-- Search field -->
+            <div class="relative flex-1">
+              <input type="text" name="search" value="<%= filters.search %>" placeholder="Search by Employee ID or Name..." class="w-full pl-9 pr-4 py-2 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 text-xs rounded-xl shadow-sm">
+              <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+
+            <!-- Date Select -->
+            <input type="date" name="date" value="<%= filters.date %>" class="border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 text-xs rounded-xl shadow-sm px-3 py-2">
+
+            <!-- Department filter -->
+            <select name="department" class="border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 text-xs rounded-xl shadow-sm px-3 py-2">
+              <option value="">All Departments</option>
+              <option value="IT & Software" <%= filters.department === 'IT & Software' ? 'selected' : '' %>>IT & Software</option>
+              <option value="Human Resources" <%= filters.department === 'Human Resources' ? 'selected' : '' %>>Human Resources</option>
+              <option value="Finance" <%= filters.department === 'Finance' ? 'selected' : '' %>>Finance</option>
+              <option value="Marketing" <%= filters.department === 'Marketing' ? 'selected' : '' %>>Marketing</option>
+              <option value="Operations" <%= filters.department === 'Operations' ? 'selected' : '' %>>Operations</option>
+              <option value="Sales" <%= filters.department === 'Sales' ? 'selected' : '' %>>Sales</option>
+            </select>
+
+            <!-- Status filter -->
+            <select name="status" class="border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 text-xs rounded-xl shadow-sm px-3 py-2">
+              <option value="">All Statuses</option>
+              <option value="Present" <%= filters.status === 'Present' ? 'selected' : '' %>>Present</option>
+              <option value="Absent" <%= filters.status === 'Absent' ? 'selected' : '' %>>Absent</option>
+              <option value="Leave" <%= filters.status === 'Leave' ? 'selected' : '' %>>On Leave</option>
+            </select>
+
+            <!-- Filter trigger -->
+            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/10 transition-colors">
+              Apply Filters
+            </button>
+          </form>
+
+          <!-- Add & Export options -->
+          <div class="flex items-center space-x-2">
+            <button onclick="window.location.href='/add-employee'" class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/10 transition-colors">
+              <svg class="w-4.5 h-4.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+              + Add Employee
+            </button>
+            <button onclick="exportTableToCSV('attendance_roster.csv')" class="inline-flex items-center px-3 py-2 border border-slate-200 bg-white rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+              <svg class="w-4 h-4 mr-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h55a2 2 0 012 2v14a2 2 0 01-2 2z"></path></svg>
+              Export CSV
+            </button>
+            <button onclick="triggerPDFPrint()" class="inline-flex items-center px-3 py-2 bg-slate-900 hover:bg-slate-950 text-white rounded-xl text-xs font-semibold shadow-md shadow-slate-900/10 transition-colors">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-5a2 2 0 00-2-2H5a.5 .5 0 00-.5 .5v5a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+              Print Report
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Styled Printable Company Invoice Header (Visible ONLY when printing PDF) -->
+        <div class="hidden print-only p-8 border-b border-slate-300">
+          <div class="flex justify-between items-center">
+            <div>
+              <h1 class="text-2xl font-bold text-slate-900">Agni Corporate Systems</h1>
+              <p class="text-sm text-slate-500">101, Business District Office Zone, Sector 4</p>
+              <p class="text-xs text-slate-400">Tel: +91 96199 36999 | Email: corporate@agnisystems.com</p>
+            </div>
+            <div class="text-right">
+              <h2 class="text-lg font-bold text-blue-600">Attendance Audit Report</h2>
+              <p class="text-xs text-slate-500">Date Logged: <%= filters.date %></p>
+              <p class="text-xs text-slate-400">Generated: <%= new Date().toLocaleString() %></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Element -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse attendance-table" id="attendance-table-el">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <th class="px-6 py-4">Employee</th>
+                <th class="px-6 py-4">ID</th>
+                <th class="px-6 py-4">Department</th>
+                <th class="px-6 py-4">Check In</th>
+                <th class="px-6 py-4">Check Out</th>
+                <th class="px-6 py-4">Hours</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4">Late Arrivals</th>
+                <th class="px-6 py-4">Overtime</th>
+                <th class="px-6 py-4 no-print actions-col">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm">
+              <% if (attendanceList.length > 0) { %>
+                <% attendanceList.forEach(log => { %>
+                  <tr class="hover:bg-slate-50/50">
+                    <td class="px-6 py-4 whitespace-nowrap flex items-center space-x-3">
+                      <div class="w-8 h-8 rounded-full overflow-hidden border border-slate-200 bg-slate-100 flex-shrink-0">
+                        <img src="<%= log.employee.avatar %>" class="w-full h-full object-cover">
+                      </div>
+                      <span class="font-semibold text-slate-800"><%= log.employee.name %></span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-xs text-slate-600"><%= log.employeeId %></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-slate-500"><%= log.employee.department %></td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700"><%= log.checkIn || '--:--' %></td>
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700"><%= log.checkOut || '--:--' %></td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-xs"><%= log.workingHours > 0 ? log.workingHours + ' hrs' : '--' %></td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        <%= log.status === 'Present' %> ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                        <%= log.status === 'Absent' %> ? 'bg-rose-50 text-rose-700 border border-rose-100' :
+                        'bg-purple-50 text-purple-700 border border-purple-100'
+                      }">
+                        <%= log.status %>
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <% if (log.status === 'Present') { %>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold <%= log.lateStatus === 'Late' ? 'bg-amber-50 text-amber-800 border border-amber-100' : 'bg-green-50 text-green-800 border border-green-100' %>">
+                          <%= log.lateStatus === 'Late' ? 'Late Arrival' : 'On-Time' %>
+                        </span>
+                      <% } else { %>
+                        <span class="text-xs text-slate-400">--</span>
+                      <% } %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-xs text-slate-500">
+                      <%= log.overtime > 0 ? '+' + log.overtime + ' hrs' : '0' %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap no-print flex space-x-1 actions-col">
+                      <button onclick="showAttendanceDetails('<%= log._id %>', '<%= log.employeeId %>', '<%= log.date %>', '<%= log.checkIn %>', '<%= log.checkOut %>', '<%= log.status %>', '<%= log.lateStatus %>', '<%= log.overtime %>', '<%= log.location %>', '<%= log.notes %>', '<%= log.employee.name %>', '<%= log.employee.department %>', '<%= log.employee.avatar %>')" class="p-1 text-slate-400 hover:text-slate-700 rounded-md" title="View details card">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                      </button>
+                      
+                      <% if (currentUser.role === 'Admin' || currentUser.role === 'HR') { %>
+                        <button onclick="openEditModal('<%= log._id %>', '<%= log.employeeId %>', '<%= log.employee.name %>', '<%= log.employee.department %>', '<%= log.employee.avatar %>', '<%= log.checkIn %>', '<%= log.checkOut %>', '<%= log.status %>', '<%= log.overtime %>', '<%= log.location %>', '<%= log.notes %>')" class="p-1 text-blue-500 hover:text-blue-700 rounded-md" title="Edit logs">
+                          <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        <button onclick="deleteAttendanceRecord('<%= log._id %>')" class="p-1 text-red-400 hover:text-red-600 rounded-md" title="Delete log">
+                          <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="10" class="px-6 py-12 text-center text-slate-500">
+                    <div class="space-y-3">
+                      <svg class="w-10 h-10 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      <p class="text-sm font-semibold">No attendance logs found matching current parameters</p>
+                      <p class="text-xs text-slate-400">Try adjusting your filters or date inputs</p>
+                    </div>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Footer / Pagination -->
+        <% if (pagination.totalPages > 1) { %>
+          <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between no-print">
+            <span class="text-xs text-slate-500">Showing page <%= pagination.page %> of <%= pagination.totalPages %> (<%= pagination.totalItems %> logs logged)</span>
+            <div class="flex items-center space-x-1.5">
+              <% if (pagination.page > 1) { %>
+                <a href="?page=<%= pagination.page - 1 %>&date=<%= filters.date %>&department=<%= filters.department %>&status=<%= filters.status %>&search=<%= filters.search %>" class="px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs font-semibold hover:bg-slate-50 text-slate-600 transition-colors">Previous</a>
+              <% } %>
+              <% for(let p=1; p<=pagination.totalPages; p++) { %>
+                <a href="?page=<%= p %>&date=<%= filters.date %>&department=<%= filters.department %>&status=<%= filters.status %>&search=<%= filters.search %>" class="px-3 py-1.5 border rounded-lg text-xs font-semibold transition-all <%= pagination.page === p ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50' %>"><%= p %></a>
+              <% } %>
+              <% if (pagination.page < pagination.totalPages) { %>
+                <a href="?page=<%= pagination.page + 1 %>&date=<%= filters.date %>&department=<%= filters.department %>&status=<%= filters.status %>&search=<%= filters.search %>" class="px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs font-semibold hover:bg-slate-50 text-slate-600 transition-colors">Next</a>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- Authorized Signature Block (Visible ONLY in Print PDF mode) -->
+        <div class="hidden print-only mt-24 px-8 flex justify-between items-end">
+          <div class="text-center w-48 border-t border-slate-400 pt-2">
+            <p class="text-xs font-bold text-slate-700">Authorized Signature</p>
+            <p class="text-[10px] text-slate-400">HR Operations Node</p>
+          </div>
+          <div class="text-center w-48 border-t border-slate-400 pt-2">
+            <p class="text-xs font-bold text-slate-700">Generated Date</p>
+            <p class="text-[10px] text-slate-400"><%= new Date().toLocaleDateString() %></p>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Include Modals Overlay -->
+  <%- include('partials/modals') %>
+
+  <!-- Bind Chart Data aggregates passed from express -->
+  <script>
+    window.chartsData = <%- JSON.stringify(charts) %>;
+  </script>
+
+  <!-- Client Script files -->
+  <script src="/js/main.js"></script>
+  <script src="/js/charts.js"></script>
+  <script src="/js/exports.js"></script>
+  
+  <script>
+    // Handles record deletion
+    async function deleteAttendanceRecord(id) {
+      if (!confirm('Are you sure you want to delete this attendance log permanently? This action logs in the audit trails.')) return;
+      try {
+        const res = await fetch(`/admin/delete/${id}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Attendance log deleted permanently', 'success');
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          showToast('Delete failed: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('Network error during deletion', 'error');
+      }
+    }
+  </script>
+
+</body>
+</html>
